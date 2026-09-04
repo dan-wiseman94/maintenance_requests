@@ -8,3 +8,30 @@ Accept: application/json
 GET {{MaintenanceApi_HostAddress}}/api/maintenancerequest/
 ACCEPT: application/json
 
+###
+
+GET {{MaintenanceApi_HostAddress}}/api/maintenancerequest/1
+ACCEPT: application/json
+
+###
+
+GET {{MaintenanceApi_HostAddress}}/api/user/
+ACCEPT: application/json
+
+###
+
+GET {{MaintenanceApi_HostAddress}}/api/user/1
+ACCEPT: application/json
+
+
+###
+
+POST {{MaintenanceApi_HostAddress}}/api/user/
+Content-Type: application/json
+
+{
+  "firstName": "Test",
+  "lastName": "User",
+  "address": "1 Example Rd",
+  "roleId": 1
+}

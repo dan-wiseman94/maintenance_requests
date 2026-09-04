@@ -9,6 +9,7 @@ namespace MaintenanceApi.Controllers;
 public class MaintenanceRequestController(AppDbContext db) : ControllerBase
 {
 
+   
     [HttpGet(Name = "GetMaintenanceRequests")]
     public async Task<ActionResult<IEnumerable<Data.MaintenanceRequest>>> Get()
     {
