@@ -53,5 +53,35 @@ public class UserController(AppDbContext db) : ControllerBase
 
     }
 
+    [HttpPut ("{id:int}", Name = "UpdateUser")]
+    public async Task<ActionResult<User>> Update(int id, CreateUserRequest request)
+    {
+        var user = await db.Users.FindAsync(id);
+
+        if (user is null)
+        {   return NotFound();}
+
+        user.FirstName = request.FirstName;
+        user.LastName = request.LastName;
+        user.Address = request.Address;
+        user.RoleId = request.RoleId;
+
+        await db.SaveChangesAsync();
+        return NoContent();
+    }
+
+   [HttpDelete("{id:int}", Name = "DeleteUser")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var user = await db.Users.FindAsync(id);
+        if (user is null)
+        {
+            return NotFound();
+        }
+
+        db.Users.Remove(user);
+        await db.SaveChangesAsync();
+        return NoContent();
+    }
         
 }

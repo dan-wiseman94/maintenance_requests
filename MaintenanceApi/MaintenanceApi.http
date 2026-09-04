@@ -1,31 +1,88 @@
 @MaintenanceApi_HostAddress = http://localhost:5000
 
-GET {{MaintenanceApi_HostAddress}}/weatherforecast/
+# ============================================================
+# Maintenance Requests
+# ============================================================
+
+### List all maintenance requests
+GET {{MaintenanceApi_HostAddress}}/api/maintenancerequest/
 Accept: application/json
 
-###
-
-GET {{MaintenanceApi_HostAddress}}/api/maintenancerequest/
-ACCEPT: application/json
-
-###
-
+### Get one maintenance request
 GET {{MaintenanceApi_HostAddress}}/api/maintenancerequest/1
-ACCEPT: application/json
+Accept: application/json
 
-###
+### Get a missing maintenance request (expect 404)
+GET {{MaintenanceApi_HostAddress}}/api/maintenancerequest/9999
+Accept: application/json
 
+### Create a maintenance request (expect 201 + Location header)
+POST {{MaintenanceApi_HostAddress}}/api/maintenancerequest/CreateMaintenanceRequest
+Content-Type: application/json
+
+{
+  "location": "105 Maple St - Garage",
+  "maintenanceType": "Electrical",
+  "createdBy": 1,
+  "statusId": 1
+}
+
+### Create with a missing field (expect 400 validation error)
+POST {{MaintenanceApi_HostAddress}}/api/maintenancerequest/CreateMaintenanceRequest
+Content-Type: application/json
+
+{
+  "location": "",
+  "maintenanceType": "Electrical",
+  "createdBy": 1,
+  "statusId": 1
+}
+
+### Update a maintenance request (expect 204; sets status to In Progress)
+PUT {{MaintenanceApi_HostAddress}}/api/maintenancerequest/1
+Content-Type: application/json
+
+{
+  "location": "101 Maple St - Kitchen",
+  "maintenanceType": "Plumbing",
+  "createdBy": 1,
+  "statusId": 2
+}
+
+### Update a missing maintenance request (expect 404)
+PUT {{MaintenanceApi_HostAddress}}/api/maintenancerequest/9999
+Content-Type: application/json
+
+{
+  "location": "Nowhere",
+  "maintenanceType": "Plumbing",
+  "createdBy": 1,
+  "statusId": 1
+}
+
+### Delete a maintenance request (expect 204; use the id returned by the create above)
+DELETE {{MaintenanceApi_HostAddress}}/api/maintenancerequest/21
+
+### Delete a missing maintenance request (expect 404)
+DELETE {{MaintenanceApi_HostAddress}}/api/maintenancerequest/9999
+
+# ============================================================
+# Users
+# ============================================================
+
+### List all users
 GET {{MaintenanceApi_HostAddress}}/api/user/
-ACCEPT: application/json
+Accept: application/json
 
-###
-
+### Get one user
 GET {{MaintenanceApi_HostAddress}}/api/user/1
-ACCEPT: application/json
+Accept: application/json
 
+### Get a missing user (expect 404)
+GET {{MaintenanceApi_HostAddress}}/api/user/9999
+Accept: application/json
 
-###
-
+### Create a user (expect 201 + Location header)
 POST {{MaintenanceApi_HostAddress}}/api/user/
 Content-Type: application/json
 
@@ -35,3 +92,45 @@ Content-Type: application/json
   "address": "1 Example Rd",
   "roleId": 1
 }
+
+### Create with a missing field (expect 400 validation error)
+POST {{MaintenanceApi_HostAddress}}/api/user/
+Content-Type: application/json
+
+{
+  "firstName": "",
+  "lastName": "User",
+  "address": "1 Example Rd",
+  "roleId": 1
+}
+
+### Update a user (expect 204)
+PUT {{MaintenanceApi_HostAddress}}/api/user/1
+Content-Type: application/json
+
+{
+  "firstName": "Alice",
+  "lastName": "Nguyen",
+  "address": "992 Updated Ave",
+  "roleId": 2
+}
+
+### Update a missing user (expect 404)
+PUT {{MaintenanceApi_HostAddress}}/api/user/9999
+Content-Type: application/json
+
+{
+  "firstName": "Nobody",
+  "lastName": "Here",
+  "address": "0 Void St",
+  "roleId": 1
+}
+
+### Delete a user (expect 204; use the id returned by the create above)
+DELETE {{MaintenanceApi_HostAddress}}/api/user/1009
+
+### Delete a user who owns maintenance requests (expect 500 today, FK violation)
+DELETE {{MaintenanceApi_HostAddress}}/api/user/1
+
+### Delete a missing user (expect 404)
+DELETE {{MaintenanceApi_HostAddress}}/api/user/9999
