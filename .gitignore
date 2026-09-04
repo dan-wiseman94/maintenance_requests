@@ -1,0 +1,31 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# .NET build output
+bin/
+obj/
+*.user
+*.suo
+*.swp
+publish/
+TestResults/
+*.nupkg
+*.snupkg
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.DotSettings.user
+
+# Frontend (Vue service, once added)
+node_modules/
+dist/
+.nuxt/
+.cache/
+
+# OS
+.DS_Store
+Thumbs.db
