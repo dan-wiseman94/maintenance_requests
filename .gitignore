@@ -22,6 +22,7 @@ TestResults/
 
 # Frontend (Vue service, once added)
 node_modules/
+.pnpm-store/
 dist/
 .nuxt/
 .cache/

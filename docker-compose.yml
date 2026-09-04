@@ -47,7 +47,21 @@ services:
     depends_on:
       db-init:
         condition: service_completed_successfully
-  # frontend: (Vue service — add once the project exists)
+
+  frontend:
+    image: node:24-alpine
+    working_dir: /app
+    volumes:
+      - ./maintenance_request:/app
+      - frontend-node-modules:/app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+    command: sh -c "corepack enable && pnpm install && pnpm dev --host 0.0.0.0"
+    depends_on:
+      - api
 
 volumes:
   mssql-data:
+  frontend-node-modules:
