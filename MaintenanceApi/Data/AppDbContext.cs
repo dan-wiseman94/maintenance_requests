@@ -2,6 +2,21 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MaintenanceApi.Data;
 
+
+public enum RequestStatus
+{
+    Open = 1,
+    InProgress = 2,
+    Closed = 3
+}
+
+public enum UserRole
+{
+    Tenant = 1,
+    Maintenance = 2,
+    Admin = 3
+}
+
 public class MaintenanceRequest
 {
     public int Id { get; set; }
@@ -9,7 +24,7 @@ public class MaintenanceRequest
     public string MaintenanceType { get; set; } = "";
     public DateTime CreatedAt { get; set; }
     public int CreatedBy { get; set; }
-    public int StatusId { get; set; }
+    public RequestStatus RequestStatus { get; set; }
 }
 
 public class User
@@ -18,7 +33,7 @@ public class User
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public string Address { get; set; } = string.Empty;
-    public int RoleId { get; set; }
+    public UserRole UserRole { get; set; }
 }
 
 
@@ -40,7 +55,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(x => x.MaintenanceType).HasColumnName("maintenance_type");
             e.Property(x => x.CreatedAt).HasColumnName("created_at").ValueGeneratedOnAdd();
             e.Property(x => x.CreatedBy).HasColumnName("created_by");
-            e.Property(x => x.StatusId).HasColumnName("status_id");
+            e.Property(x => x.RequestStatus).HasColumnName("status_id");
         });
 
          mb.Entity<User>(e =>
@@ -50,7 +65,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(x => x.FirstName).HasColumnName("first_name");
              e.Property(x => x.LastName).HasColumnName("last_name");
             e.Property(x => x.Address).HasColumnName("address");
-            e.Property(x => x.RoleId).HasColumnName("role_id");
+            e.Property(x => x.UserRole).HasColumnName("role_id");
            
         });
     }

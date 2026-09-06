@@ -10,7 +10,7 @@ public record CreateUserRequest(
     [Required, MaxLength(255)] string FirstName,
     [Required, MaxLength(255)] string LastName,
     [Required, MaxLength(255)] string Address,
-    [Range(1, int.MaxValue)] int RoleId
+    [Required] UserRole UserRole
 );
 
 [ApiController]
@@ -44,7 +44,7 @@ public class UserController(AppDbContext db) : ControllerBase
             FirstName = request.FirstName,
             LastName = request.LastName,
             Address = request.Address,
-            RoleId = request.RoleId,
+            UserRole = request.UserRole,
         };
 
         db.Users.Add(user);
@@ -64,7 +64,7 @@ public class UserController(AppDbContext db) : ControllerBase
         user.FirstName = request.FirstName;
         user.LastName = request.LastName;
         user.Address = request.Address;
-        user.RoleId = request.RoleId;
+        user.UserRole = request.UserRole;
 
         await db.SaveChangesAsync();
         return NoContent();

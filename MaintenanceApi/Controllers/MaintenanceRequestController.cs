@@ -9,7 +9,7 @@ public record CreateMaintenanceRequest(
     [Required, MaxLength(255)] string Location,
     [Required, MaxLength(255)] string MaintenanceType,
     [Range(1, int.MaxValue)] int CreatedBy,
-    [Range(1, int.MaxValue)] int StatusId
+    [Required] RequestStatus RequestStatus
 );
 
 [ApiController]
@@ -45,7 +45,7 @@ public class MaintenanceRequestController(AppDbContext db) : ControllerBase
             Location = request.Location,
             MaintenanceType = request.MaintenanceType,
             CreatedBy = request.CreatedBy,
-            StatusId = request.StatusId
+            RequestStatus = request.RequestStatus
         };
 
         db.MaintenanceRequests.Add(new_request);
@@ -66,7 +66,8 @@ public class MaintenanceRequestController(AppDbContext db) : ControllerBase
         maintenance_request.Location = request.Location;
         maintenance_request.MaintenanceType = request.MaintenanceType;
         maintenance_request.CreatedBy = request.CreatedBy;
-        maintenance_request.StatusId = request.StatusId;
+        maintenance_request.RequestStatus = request.RequestStatus;
+      
 
         await db.SaveChangesAsync();
         return NoContent();
