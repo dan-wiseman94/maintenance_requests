@@ -32,7 +32,7 @@
           </td>
         </tr>
 
-        <!-- loop throw items to build rows -->
+        <!-- loop through items to build rows -->
          <tr v-else  v-for="(item, index) in items" :key="item.id ?? index">
             <td v-for="header in headers" :key="header.key">
               <slot :name="`cell(${header.key})`" :item="item" :value="item[header.key]">

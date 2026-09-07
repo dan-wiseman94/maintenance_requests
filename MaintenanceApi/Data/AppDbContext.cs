@@ -25,6 +25,7 @@ public class MaintenanceRequest
     public DateTime CreatedAt { get; set; }
     public int CreatedBy { get; set; }
     public RequestStatus RequestStatus { get; set; }
+    public User? Creator {get; set;}
 }
 
 public class User
@@ -56,6 +57,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(x => x.CreatedAt).HasColumnName("created_at").ValueGeneratedOnAdd();
             e.Property(x => x.CreatedBy).HasColumnName("created_by");
             e.Property(x => x.RequestStatus).HasColumnName("status_id");
+            e.HasOne(x => x.Creator)
+                .WithMany()
+                .HasForeignKey(x => x.CreatedBy);
         });
 
          mb.Entity<User>(e =>

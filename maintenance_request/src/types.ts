@@ -11,8 +11,9 @@ export type MaintenanceRequest = {
     id: number;
     location: string;
     maintenanceType: string;
-    createdAt: Date;
-    createdBy: string;
+    createdAt: string;
+    createdBy: number;
     requestStatus: string;
+    createdByName: string;
 };
 

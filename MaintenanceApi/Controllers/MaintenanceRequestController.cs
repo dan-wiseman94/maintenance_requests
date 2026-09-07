@@ -12,6 +12,16 @@ public record CreateMaintenanceRequest(
     [Required] RequestStatus RequestStatus
 );
 
+public record MaintenanceRequestResponse(
+    int Id,
+    string Location,
+    string MaintenanceType,
+    DateTime CreatedAt,
+    int CreatedBy,
+    string CreatedByName,
+    RequestStatus RequestStatus
+);
+
 [ApiController]
 [Route("api/[controller]")]
 public class MaintenanceRequestController(AppDbContext db) : ControllerBase
@@ -19,15 +29,28 @@ public class MaintenanceRequestController(AppDbContext db) : ControllerBase
 
    
     [HttpGet(Name = "GetMaintenanceRequests")]
-    public async Task<ActionResult<IEnumerable<Data.MaintenanceRequest>>> Get()
+    public async Task<ActionResult<IEnumerable<MaintenanceRequestResponse>>> Get()
     {
-        return await db.MaintenanceRequests.ToListAsync();
+        return await db.MaintenanceRequests
+            .Select(r => new MaintenanceRequestResponse(
+                r.Id, r.Location, r.MaintenanceType, r.CreatedAt,
+                r.CreatedBy,
+                r.Creator!.FirstName + " " + r.Creator.LastName,
+                r.RequestStatus))
+            .ToListAsync();
     }
 
     [HttpGet("{id:int}", Name = "GetMaintenanceRequest")]
-    public async Task<ActionResult<Data.MaintenanceRequest>> GetById(int id)
+    public async Task<ActionResult<MaintenanceRequestResponse>> GetById(int id)
     {
-        var maintenanceRequest = await db.MaintenanceRequests.FindAsync(id);
+        var maintenanceRequest = await db.MaintenanceRequests
+                                    .Where(r => r.Id == id)
+                                    .Select(r => new MaintenanceRequestResponse(
+                                        r.Id, r.Location, r.MaintenanceType, r.CreatedAt,
+                                        r.CreatedBy,
+                                        r.Creator!.FirstName + " " + r.Creator.LastName,
+                                        r.RequestStatus))
+                                    .FirstOrDefaultAsync();
 
         if (maintenanceRequest is null)
         {
@@ -38,7 +61,7 @@ public class MaintenanceRequestController(AppDbContext db) : ControllerBase
     }
 
     [HttpPost("CreateMaintenanceRequest")]
-    public async Task<ActionResult<MaintenanceRequest>> Create(CreateMaintenanceRequest request)
+    public async Task<ActionResult<MaintenanceRequestResponse>> Create(CreateMaintenanceRequest request)
     {
         var new_request = new  MaintenanceRequest
         {
@@ -50,7 +73,21 @@ public class MaintenanceRequestController(AppDbContext db) : ControllerBase
 
         db.MaintenanceRequests.Add(new_request);
         await db.SaveChangesAsync();
-        return CreatedAtRoute("GetMaintenanceRequest", new {id = new_request.Id}, new_request);
+        var response = await db.MaintenanceRequests
+            .Where(r => r.Id == new_request.Id)
+            .Select(r => new MaintenanceRequestResponse(
+                r.Id, r.Location, r.MaintenanceType, r.CreatedAt,
+                r.CreatedBy,
+                r.Creator!.FirstName + " " + r.Creator.LastName,
+                r.RequestStatus))
+            .FirstOrDefaultAsync();
+
+        if (response is null)
+        {
+            return NotFound();
+        }
+
+        return response;
 
     }
 

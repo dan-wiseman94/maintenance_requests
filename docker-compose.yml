@@ -39,11 +39,28 @@ services:
         fi
 
   api:
-    build: ./MaintenanceApi
+    # Dev: run the SDK image directly and let `dotnet watch` rebuild on change.
+    # MaintenanceApi/Dockerfile is still the production build path.
+    image: mcr.microsoft.com/dotnet/sdk:10.0
+    working_dir: /src
+    volumes:
+      - ./MaintenanceApi:/src
+      # Mask the host's bin/obj: they hold host-absolute paths and a host RID.
+      - api-bin:/src/bin
+      - api-obj:/src/obj
+      # Persist the NuGet cache so restore doesn't re-download on every start.
+      - nuget-packages:/root/.nuget/packages
     ports:
       - "5000:8080"
     environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: "http://+:8080"
+      # Bind-mount inotify events are unreliable; poll instead.
+      DOTNET_USE_POLLING_FILE_WATCHER: "true"
+      # No TTY here, so auto-restart on rude edits instead of prompting.
+      DOTNET_WATCH_RESTART_ON_RUDE_EDIT: "true"
       ConnectionStrings__Default: "Server=db,1433;Database=maintenance;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True"
+    command: ["dotnet", "watch", "run", "--no-launch-profile", "--project", "MaintenanceApi.csproj"]
     depends_on:
       db-init:
         condition: service_completed_successfully
@@ -65,3 +82,6 @@ services:
 volumes:
   mssql-data:
   frontend-node-modules:
+  api-bin:
+  api-obj:
+  nuget-packages:

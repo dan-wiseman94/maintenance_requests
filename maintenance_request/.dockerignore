@@ -1,0 +1,40 @@
+
+# Host dependencies and build output.
+
+node_modules
+.pnpm-store
+dist
+dist-ssr
+*.tsbuildinfo
+
+# Caches
+.cache
+.eslintcache
+.vite
+*.timestamp-*-*.mjs
+
+# Local env files and secrets.
+.env
+.env.*
+!.env.example
+*.local
+
+# Docker plumbing itself.
+Dockerfile
+.dockerignore
+
+# Editor / IDE and tooling config 
+.vscode
+.editorconfig
+.gitattributes
+.gitignore
+.git
+
+# Docs and logs.
+README.md
+*.log
+logs
+
+# OS metadata.
+.DS_Store
+Thumbs.db

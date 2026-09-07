@@ -1,0 +1,37 @@
+
+# Host build output 
+bin/
+obj/
+publish/
+TestResults/
+*.nupkg
+*.snupkg
+
+# Local dev config and secrets.
+
+appsettings.Development.json
+appsettings.*.Development.json
+Properties/launchSettings.json
+.env
+.env.*
+*.user
+*.suo
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Editor / IDE noise.
+.vs/
+.vscode/
+*.DotSettings.user
+*.swp
+
+# Scratch files that aren't part of the app.
+*.http
+*.md
+*.log
+
+# OS metadata.
+.DS_Store
+Thumbs.db
