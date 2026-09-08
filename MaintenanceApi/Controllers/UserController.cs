@@ -13,15 +13,38 @@ public record CreateUserRequest(
     [Required] UserRole UserRole
 );
 
+
 [ApiController]
 [Route("api/[controller]")]
 public class UserController(AppDbContext db) : ControllerBase
 {
    
     [HttpGet(Name = "GetUsers")]
-    public async Task<ActionResult<IEnumerable<User>>> Get()
+    public async Task<ActionResult<PagedResult<User>>> Get(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20
+    )
     {
-        return await db.Users.ToListAsync();
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+
+        var query = db.Users
+            .AsNoTracking()
+            .OrderBy(u => u.Id);
+
+        var totalCount = await query.CountAsync();
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var pagedResult = new PagedResult<User>(
+            items,
+            page,
+            pageSize,
+            totalCount);
+
+        return pagedResult;
     }
 
     [HttpGet("{id:int}", Name = "GetUser")]

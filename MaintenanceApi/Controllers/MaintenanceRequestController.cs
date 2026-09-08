@@ -29,15 +29,33 @@ public class MaintenanceRequestController(AppDbContext db) : ControllerBase
 
    
     [HttpGet(Name = "GetMaintenanceRequests")]
-    public async Task<ActionResult<IEnumerable<MaintenanceRequestResponse>>> Get()
+    public async Task<ActionResult<PagedResult<MaintenanceRequestResponse>>> Get(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20
+    )
     {
-        return await db.MaintenanceRequests
+    
+        var query = db.MaintenanceRequests
+            .AsNoTracking()
             .Select(r => new MaintenanceRequestResponse(
                 r.Id, r.Location, r.MaintenanceType, r.CreatedAt,
                 r.CreatedBy,
                 r.Creator!.FirstName + " " + r.Creator.LastName,
-                r.RequestStatus))
+                r.RequestStatus));
+
+        var totalCount = await query.CountAsync();
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
+
+        var pagedResult = new PagedResult<MaintenanceRequestResponse>(
+            items,
+            page,
+            pageSize,
+            totalCount);
+
+        return pagedResult;
     }
 
     [HttpGet("{id:int}", Name = "GetMaintenanceRequest")]

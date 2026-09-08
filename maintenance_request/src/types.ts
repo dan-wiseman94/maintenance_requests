@@ -16,4 +16,9 @@ export type MaintenanceRequest = {
     requestStatus: string;
     createdByName: string;
 };
-
+export type PagedResult<T> = {
+    items: T[];
+    page: number;
+    pageSize: number;
+    totalCount: number;
+};
