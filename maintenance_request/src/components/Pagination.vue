@@ -21,30 +21,55 @@ function goTo(target: number): void {
 <template>
     <div class="arrows-container">
         <button class="arrows" :class="{ disabled: !canPrev }" @click="goTo(page - 1)">&#8592; Previous</button>
+        <div class="page-indicator">Page {{ page }} of {{ totalPages }}</div>
         <button class="arrows" :class="{ disabled: !canNext }" @click="goTo(page + 1)">Next &#8594;</button>
-        <div :style="{ textAlign: 'center', fontWeight: 'bold'}">Page {{ page }} of {{ totalPages }}</div>
     </div>
 </template>
 
 <style lang="css" scoped>
-    .arrows {
-        display: inline-block;
-        border: var(--border);
-        border-radius: var(--radius);
-        height: 5ch;
-        width: 20ch;
-        text-align: center;
-        cursor: pointer;
-        user-select: none;
-        margin: 1ch;
-    }
+.arrows-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2) var(--space-4);
+    margin-top: var(--space-4);
+}
 
-    .arrows.disabled {
-        opacity: 0.4;
-        cursor: not-allowed;
-    }
+.arrows {
+    padding: 0.55rem 1.25rem;
+    border: var(--border);
+    border-radius: 999px;
+    background-color: var(--surface);
+    color: var(--ink-soft);
+    font-size: 0.9rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
 
-    .arrows-container {
-        padding: 2ch;
-    }
+.arrows:hover:not(.disabled) {
+    background-color: var(--accent-wash);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.arrows:active:not(.disabled) {
+    transform: translateY(1px);
+}
+
+.arrows.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.page-indicator {
+    min-width: 12ch;
+    color: var(--ink-soft);
+    font-size: 0.875rem;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+}
 </style>
