@@ -2,3 +2,31 @@
     --border: 2px solid black;
     --radius: 10%;
 }
+
+body {
+
+}
+html {
+    background-color: antiquewhite;
+    background-image: url('tennessee-logo.png');
+
+}
+
+.center {
+    background-color: antiquewhite;
+    padding: 10ch;
+}
+.table-container {
+    border: 2px solid darkgray;
+    border-radius: 5%;
+    padding: 2ch;
+    background-color: antiquewhite;
+}
+
+.link-bar {
+    column-gap: 2ch;
+    display: flex;
+    font-weight: bold;
+    margin-bottom: 2ch;
+    background-color: antiquewhite;
+}

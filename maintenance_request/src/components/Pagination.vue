@@ -19,7 +19,7 @@ function goTo(target: number): void {
 
 
 <template>
-    <div>
+    <div class="arrows-container">
         <button class="arrows" :class="{ disabled: !canPrev }" @click="goTo(page - 1)">&#8592; Previous</button>
         <button class="arrows" :class="{ disabled: !canNext }" @click="goTo(page + 1)">Next &#8594;</button>
         <div :style="{ textAlign: 'center', fontWeight: 'bold'}">Page {{ page }} of {{ totalPages }}</div>
@@ -36,10 +36,15 @@ function goTo(target: number): void {
         text-align: center;
         cursor: pointer;
         user-select: none;
+        margin: 1ch;
     }
 
     .arrows.disabled {
         opacity: 0.4;
         cursor: not-allowed;
+    }
+
+    .arrows-container {
+        padding: 2ch;
     }
 </style>
