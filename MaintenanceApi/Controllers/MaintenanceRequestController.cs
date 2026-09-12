@@ -31,12 +31,25 @@ public class MaintenanceRequestController(AppDbContext db) : ControllerBase
     [HttpGet(Name = "GetMaintenanceRequests")]
     public async Task<ActionResult<PagedResult<MaintenanceRequestResponse>>> Get(
         [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 20
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string orderBy = "createdAt",
+        [FromQuery] bool desc = false
     )
     {
-    
-        var query = db.MaintenanceRequests
-            .AsNoTracking()
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+        IQueryable<MaintenanceRequest> requests = db.MaintenanceRequests.AsNoTracking();
+
+        requests = orderBy?.Trim() switch
+        {
+            "location" => requests.OrderByDirection(r => r.Location, desc, r => r.Id),
+            "maintenanceType" => requests.OrderByDirection(r => r.MaintenanceType, desc, r => r.Id),
+            "createdBy" => requests.OrderByDirection(r => r.CreatedBy, desc, r => r.Id),
+            "requestStatus" => requests.OrderByDirection(r => r.RequestStatus, desc, r => r.Id),
+            _ => requests.OrderByDirection(r => r.CreatedAt, desc, r => r.Id)
+        };
+
+        var query = requests
             .Select(r => new MaintenanceRequestResponse(
                 r.Id, r.Location, r.MaintenanceType, r.CreatedAt,
                 r.CreatedBy,

@@ -22,15 +22,23 @@ public class UserController(AppDbContext db) : ControllerBase
     [HttpGet(Name = "GetUsers")]
     public async Task<ActionResult<PagedResult<User>>> Get(
         [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 20
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string orderBy = "lastName",
+        [FromQuery] bool desc = false
     )
     {
         page = Math.Max(1, page);
         pageSize = Math.Clamp(pageSize, 1, 100);
+        IQueryable<User> query = db.Users.AsNoTracking();
 
-        var query = db.Users
-            .AsNoTracking()
-            .OrderBy(u => u.Id);
+        query = orderBy?.Trim() switch
+        {
+            "firstName" => query.OrderByDirection(u => u.FirstName, desc, u => u.Id),
+            "lastName" => query.OrderByDirection(u => u.LastName, desc, u => u.Id),
+            "address" => query.OrderByDirection(u => u.Address, desc, u => u.Id),
+            "userRole" => query.OrderByDirection(u => u.UserRole, desc, u => u.Id),
+            _ => query.OrderByDirection(u => u.LastName, desc, u => u.Id)
+        };
 
         var totalCount = await query.CountAsync();
         var items = await query
