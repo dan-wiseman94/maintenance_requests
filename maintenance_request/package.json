@@ -24,10 +24,10 @@
   "devDependencies": {
     "@playwright/test": "^1.61.1",
     "@tsconfig/node24": "^24.0.4",
-    "@types/jsdom": "^28.0.3",
     "@types/node": "^24.13.3",
     "@vitejs/plugin-vue": "^6.0.8",
     "@vitejs/plugin-vue-jsx": "^5.1.6",
+    "@vitest/browser-playwright": "^4.1.11",
     "@vitest/eslint-plugin": "^1.6.23",
     "@vue/eslint-config-typescript": "^14.9.0",
     "@vue/test-utils": "^2.4.11",
@@ -38,7 +38,6 @@
     "eslint-plugin-playwright": "^2.10.5",
     "eslint-plugin-vue": "~10.9.2",
     "jiti": "^2.7.0",
-    "jsdom": "^29.1.1",
     "npm-run-all2": "^9.0.2",
     "oxlint": "~1.74.0",
     "prettier": "3.9.5",
@@ -46,6 +45,7 @@
     "vite": "^8.1.5",
     "vite-plugin-vue-devtools": "^8.1.5",
     "vitest": "^4.1.10",
+    "vitest-browser-vue": "^3.1.0",
     "vue-eslint-parser": "^10.4.1",
     "vue-tsc": "^3.3.7"
   },
