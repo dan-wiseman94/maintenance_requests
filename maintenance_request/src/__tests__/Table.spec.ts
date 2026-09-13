@@ -26,8 +26,8 @@ describe('Table', () => {
         })
 
         const headers = wrapper.findAll('th')
-        expect(headers).toHaveLength(2)
-        expect(headers.map(th => th.text())).toEqual(['Location', 'Maintenance Type'])
+        expect(headers).toHaveLength(4)
+        expect(headers.map(th => th.text())).toEqual(['Location ▲▼', 'Maintenance Type ▲▼',  "Edit", "Delete",])
     })
     it('Renders one body row per item', () => {
         const wrapper = mount(Table, {
@@ -56,8 +56,8 @@ describe('Table', () => {
 
         const cellText = rows.map(row => row.findAll('td').map(td => td.text()))
         expect(cellText).toEqual([
-            ['Here', 'Something'],
-            ['There', 'Something Else'],
+            ['Here', 'Something', 'Edit ✎', 'X'],
+            ['There', 'Something Else', 'Edit ✎', 'X'],
         ])
     })
 
