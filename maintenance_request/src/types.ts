@@ -1,35 +1,33 @@
-
-
 export type User = {
-    id: number;
-    firstName: string;
-    lastName: string;
-    address: string;
-    userRole: string;
-};
+  id: number
+  firstName: string
+  lastName: string
+  address: string
+  userRole: string
+}
 export type MaintenanceRequest = {
-    id: number;
-    location: string;
-    maintenanceType: string;
-    createdAt: string;
-    createdBy: number;
-    requestStatus: string;
-    createdByName: string;
-};
+  id: number
+  location: string
+  maintenanceType: string
+  createdAt: string
+  createdBy: number
+  requestStatus: string
+  createdByName: string
+}
 export type PagedResult<T> = {
-    items: T[];
-    page: number;
-    pageSize: number;
-    totalCount: number;
-};
+  items: T[]
+  page: number
+  pageSize: number
+  totalCount: number
+}
 
 export type Header = {
-    key: string;
-    label: string;
-    editable?: boolean;
-};
+  key: string
+  label: string
+  editable?: boolean
+}
 
 export type Sort = {
-    key: string;
-    desc: boolean;
-};
+  key: string
+  desc: boolean
+}

@@ -9,161 +9,191 @@ import Pagination from '@/components/Pagination.vue'
 import Table from '@/components/Table.vue'
 
 describe('RequestsView', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
 
-    afterEach(() => {
-        vi.unstubAllGlobals();
+  it('retrieves data', async () => {
+    const body: PagedResult<MaintenanceRequest> = {
+      items: [
+        {
+          id: 1,
+          location: 'Anywhere',
+          maintenanceType: 'FakeCat',
+          createdAt: 'Now',
+          createdBy: 15,
+          requestStatus: 'Do it',
+          createdByName: 'Me Too',
+        },
+      ],
+      page: 1,
+      pageSize: 20,
+      totalCount: 1,
+    }
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue(body),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const wrapper = await render(RequestsView, {
+      global: {
+        stubs: { RouterLink: true, RouterView: true },
+      },
     })
 
-    it('retrieves data', async () => {
-        const body: PagedResult<MaintenanceRequest> = {
-            items: [
-                { id: 1, location: 'Anywhere', maintenanceType: 'FakeCat', createdAt: 'Now', createdBy: 15, requestStatus: 'Do it', createdByName: 'Me Too' }
-            ],
-            page: 1,
-            pageSize: 20,
-            totalCount: 1,
-        }
-        const fetchMock = vi.fn().mockResolvedValue({
-            ok: true,
-            json: vi.fn().mockResolvedValue(body),
-        })
-        vi.stubGlobal('fetch', fetchMock)
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/MaintenanceRequest?page=1&pageSize=20&orderBy=createdAt&desc=false',
+    )
 
-        const wrapper = await render(RequestsView, {
-            global: {
-                stubs: { RouterLink: true, RouterView: true }
-            }
-        });
+    await expect.element(wrapper.getByText('Anywhere')).toBeInTheDocument()
+    await expect.element(wrapper.getByText('LOADING')).not.toBeInTheDocument()
+  })
 
-        expect(fetchMock).toHaveBeenCalledWith('/api/MaintenanceRequest?page=1&pageSize=20&orderBy=createdAt&desc=false');
+  it('Shows LOADING on mount', async () => {
+    const wrapper = mount(RequestsView)
+    expect(wrapper.text()).toContain('LOADING')
+  })
 
-        await expect.element(wrapper.getByText('Anywhere')).toBeInTheDocument();
-        await expect.element(wrapper.getByText('LOADING')).not.toBeInTheDocument();
+  it('shows error message when ok: false', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const wrapper = mount(RequestsView)
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Failed to fetch requests. 500')
+    expect(wrapper.text()).not.toContain('LOADING')
+  })
+
+  it('Passes page, pageSize, and totalCount to the Pagination element', async () => {
+    const body: PagedResult<MaintenanceRequest> = {
+      items: [],
+      page: 3,
+      pageSize: 20,
+      totalCount: 42,
+    }
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue(body),
     })
 
-    it('Shows LOADING on mount', async () => {
-        const wrapper = mount(RequestsView)
-        expect(wrapper.text()).toContain('LOADING')
+    vi.stubGlobal('fetch', fetchMock)
+
+    const wrapper = mount(RequestsView)
+    await flushPromises()
+
+    const pagination = wrapper.findComponent({ name: 'Pagination' })
+
+    expect(pagination.exists()).toBe(true)
+    expect(pagination.props('page')).toBe(3)
+    expect(pagination.props('pageSize')).toBe(20)
+    expect(pagination.props('totalCount')).toBe(42)
+  })
+
+  it('Shows loading state while a fetch is in flight', async () => {
+    let resolveFetch: (value: unknown) => void
+    const fetchMock = vi.fn().mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveFetch = resolve
+        }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const wrapper = mount(RequestsView)
+    await Promise.resolve()
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/MaintenanceRequest?page=1&pageSize=20&orderBy=createdAt&desc=false',
+    )
+    expect(wrapper.text()).toContain('LOADING')
+
+    resolveFetch!({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        items: [],
+        page: 1,
+        pageSize: 20,
+        totalCount: 0,
+      }),
+    })
+    await flushPromises()
+
+    expect(wrapper.text()).not.toContain('LOADING')
+  })
+
+  it('When second load is in flight, Pagination busy = true, then false afterward', async () => {
+    const emptyPage = (page: number): PagedResult<MaintenanceRequest> => ({
+      items: [],
+      page,
+      pageSize: 20,
+      totalCount: 40,
     })
 
-    it('shows error message when ok: false', async () => {
-        const fetchMock = vi.fn().mockResolvedValue({
-            ok: false,
-            status: 500
-        })
-        vi.stubGlobal('fetch', fetchMock)
+    let resolveSecond: (value: unknown) => void
 
-        const wrapper = mount(RequestsView)
-        await flushPromises()
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, json: vi.fn().mockResolvedValue(emptyPage(1)) })
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveSecond = resolve
+          }),
+      )
 
-        expect(wrapper.text()).toContain('Failed to fetch requests. 500')
-        expect(wrapper.text()).not.toContain('LOADING')
+    vi.stubGlobal('fetch', fetchMock)
+
+    const wrapper = mount(RequestsView)
+    await flushPromises()
+
+    const pagination = wrapper.findComponent(Pagination)
+    expect(pagination.props('busy')).toBe(false)
+
+    pagination.vm.$emit('update:page', 2)
+    await flushPromises()
+
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      '/api/MaintenanceRequest?page=2&pageSize=20&orderBy=createdAt&desc=false',
+    )
+    expect(pagination.props('busy')).toBe(true)
+
+    resolveSecond!({ ok: true, json: vi.fn().mockResolvedValue(emptyPage(2)) })
+    await flushPromises()
+
+    expect(pagination.props('busy')).toBe(false)
+    expect(pagination.props('page')).toBe(2)
+  })
+
+  it('refetches page 1 with the new ordering when Table emits update:sort', async () => {
+    const emptyPage = (page: number): PagedResult<MaintenanceRequest> => ({
+      items: [],
+      page,
+      pageSize: 20,
+      totalCount: 40,
     })
+    const fetchMock = vi
+      .fn()
+      .mockImplementation(async () => ({ ok: true, json: async () => emptyPage(1) }))
+    vi.stubGlobal('fetch', fetchMock)
 
-    it('Passes page, pageSize, and totalCount to the Pagination element', async () => {
-        const body: PagedResult<MaintenanceRequest> = {
-            items: [],
-            page: 3,
-            pageSize: 20,
-            totalCount: 42
-        }
+    const wrapper = mount(RequestsView)
+    await flushPromises()
 
-        const fetchMock = vi.fn().mockResolvedValue({
-            ok: true,
-            json: vi.fn().mockResolvedValue(body)
-        })
+    const table = wrapper.findComponent(Table)
+    expect(table.props('sort')).toEqual({ key: 'createdAt', desc: false })
 
-        vi.stubGlobal('fetch', fetchMock)
+    table.vm.$emit('update:sort', { key: 'location', desc: true })
+    await flushPromises()
 
-        const wrapper = mount(RequestsView)
-        await flushPromises()
-
-        const pagination = wrapper.findComponent({ name: 'Pagination'})
-
-        expect(pagination.exists()).toBe(true)
-        expect(pagination.props('page')).toBe(3)
-        expect(pagination.props('pageSize')).toBe(20)
-        expect(pagination.props('totalCount')).toBe(42)
-    })
-
-    it('Shows loading state while a fetch is in flight', async () => {
-        let resolveFetch: (value: any) => void 
-        const fetchMock = vi.fn().mockImplementation(
-            () => 
-                new Promise((resolve) => {
-                    resolveFetch = resolve
-                }),
-        )
-        vi.stubGlobal('fetch', fetchMock)
-
-        const wrapper = mount(RequestsView)
-        await Promise.resolve()
-
-        expect(fetchMock).toHaveBeenCalledWith('/api/MaintenanceRequest?page=1&pageSize=20&orderBy=createdAt&desc=false')
-        expect(wrapper.text()).toContain('LOADING')
-
-        resolveFetch!({
-            ok: true,
-            json: vi.fn().mockResolvedValue({
-                items: [],
-                page: 1,
-                pageSize: 20,
-                totalCount: 0
-            })
-        })
-        await flushPromises()
-
-        expect(wrapper.text()).not.toContain('LOADING')
-    }) 
-
-    it('When second load is in flight, Pagination busy = true, then false afterward', async () => {
-        const emptyPage = (page: number): PagedResult<MaintenanceRequest> => ({ items: [], page, pageSize: 20, totalCount: 40})
-
-        let resolveSecond: (value: any) => void 
-
-        const fetchMock = vi 
-            .fn()
-            .mockResolvedValueOnce({ok: true, json: vi.fn().mockResolvedValue(emptyPage(1))})
-            .mockImplementationOnce(() => new Promise((resolve) => {resolveSecond = resolve}))
-        
-        vi.stubGlobal('fetch', fetchMock)
-
-        const wrapper = mount(RequestsView)
-        await flushPromises()
-
-        const pagination = wrapper.findComponent(Pagination)
-        expect(pagination.props('busy')).toBe(false)
-
-        pagination.vm.$emit('update:page', 2)
-        await flushPromises()
-
-        expect(fetchMock).toHaveBeenLastCalledWith('/api/MaintenanceRequest?page=2&pageSize=20&orderBy=createdAt&desc=false')
-        expect(pagination.props('busy')).toBe(true)
-
-        resolveSecond!({ok: true, json: vi.fn().mockResolvedValue(emptyPage(2))})
-        await flushPromises()
-
-        expect(pagination.props('busy')).toBe(false)
-        expect(pagination.props('page')).toBe(2)
-        
-
-    })
-
-    it('refetches page 1 with the new ordering when Table emits update:sort', async () => {
-        const emptyPage = (page: number): PagedResult<MaintenanceRequest> => ({ items: [], page, pageSize: 20, totalCount: 40 })
-        const fetchMock = vi.fn().mockImplementation(async () => ({ ok: true, json: async () => emptyPage(1) }))
-        vi.stubGlobal('fetch', fetchMock)
-
-        const wrapper = mount(RequestsView)
-        await flushPromises()
-
-        const table = wrapper.findComponent(Table)
-        expect(table.props('sort')).toEqual({ key: 'createdAt', desc: false })
-
-        table.vm.$emit('update:sort', { key: 'location', desc: true })
-        await flushPromises()
-
-        expect(fetchMock).toHaveBeenLastCalledWith('/api/MaintenanceRequest?page=1&pageSize=20&orderBy=location&desc=true')
-        expect(table.props('sort')).toEqual({ key: 'location', desc: true })
-    })
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      '/api/MaintenanceRequest?page=1&pageSize=20&orderBy=location&desc=true',
+    )
+    expect(table.props('sort')).toEqual({ key: 'location', desc: true })
+  })
 })
