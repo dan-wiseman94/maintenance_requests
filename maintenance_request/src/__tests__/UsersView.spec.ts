@@ -29,7 +29,7 @@ describe('UsersView', () => {
         const wrapper = mount(UsersView)
         await flushPromises()
 
-        expect(fetchMock).toHaveBeenCalledWith('/api/User?page=1&pageSize=20')
+        expect(fetchMock).toHaveBeenCalledWith('/api/User?page=1&pageSize=20&orderBy=lastName&desc=false')
         expect(wrapper.text()).toContain('Alice')
         expect(wrapper.text()).toContain('Smith')
         expect(wrapper.text()).not.toContain('LOADING')
@@ -93,7 +93,7 @@ describe('UsersView', () => {
         const wrapper = mount(UsersView)
         await Promise.resolve()
 
-        expect(fetchMock).toHaveBeenCalledWith('/api/User?page=1&pageSize=20')
+        expect(fetchMock).toHaveBeenCalledWith('/api/User?page=1&pageSize=20&orderBy=lastName&desc=false')
         expect(wrapper.text()).toContain('LOADING')
 
         resolveFetch!({
@@ -130,7 +130,7 @@ describe('UsersView', () => {
         pagination.vm.$emit('update:page', 2)
         await flushPromises()
 
-        expect(fetchMock).toHaveBeenLastCalledWith('/api/User?page=2&pageSize=20')
+        expect(fetchMock).toHaveBeenLastCalledWith('/api/User?page=2&pageSize=20&orderBy=lastName&desc=false')
         expect(pagination.props('busy')).toBe(true)
 
         resolveSecond!({ ok: true, json: vi.fn().mockResolvedValue(emptyPage(2)) })

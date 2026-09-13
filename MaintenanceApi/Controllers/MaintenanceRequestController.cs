@@ -45,6 +45,8 @@ public class MaintenanceRequestController(AppDbContext db) : ControllerBase
             "location" => requests.OrderByDirection(r => r.Location, desc, r => r.Id),
             "maintenanceType" => requests.OrderByDirection(r => r.MaintenanceType, desc, r => r.Id),
             "createdBy" => requests.OrderByDirection(r => r.CreatedBy, desc, r => r.Id),
+            // Sort by the name the client displays, not the foreign key.
+            "createdByName" => requests.OrderByDirection(r => r.Creator!.FirstName + " " + r.Creator.LastName, desc, r => r.Id),
             "requestStatus" => requests.OrderByDirection(r => r.RequestStatus, desc, r => r.Id),
             _ => requests.OrderByDirection(r => r.CreatedAt, desc, r => r.Id)
         };

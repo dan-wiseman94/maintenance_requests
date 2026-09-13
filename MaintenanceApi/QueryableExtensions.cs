@@ -1,5 +1,7 @@
 using System.Linq.Expressions;
 
+namespace MaintenanceApi;
+
 public static class QueryableExtensions
 {
     public static IQueryable<T> OrderByDirection<T, TKey, TTie>(

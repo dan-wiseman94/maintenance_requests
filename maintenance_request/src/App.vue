@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import 'vue-sonner/style.css';
+import {Toaster} from 'vue-sonner';
 </script>
 
 <template>
@@ -13,6 +15,8 @@
             </nav>
             <RouterView />
         </div>
+        <Toaster/>
+
     </main>
 </template>
 

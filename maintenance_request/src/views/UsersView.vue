@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
 import { onMounted, ref } from 'vue';
-import type { User } from '@/types';
+import type { User, Header, Sort } from '@/types';
 
 import Table from '@/components/Table.vue';
 import Pagination from '@/components/Pagination.vue';
@@ -9,11 +9,15 @@ import Pagination from '@/components/Pagination.vue';
 const users = ref<User[]>([]);
 const page = ref(1);
 const pageSize = ref(20);
+// Mirrors the API's default ordering so the header arrow is correct before anyone clicks.
+const sort = ref<Sort>({ key: 'lastName', desc: false });
 const totalCount = ref(0);
 const busy = ref(false);
 const loading = ref<boolean>(true);
 const error = ref<Error | null>(null);
-const userColumns = [
+const deleteError = ref<string | null>(null);
+
+const userColumns: Header[] = [
     { key: 'firstName', label: 'First Name' },
     { key: 'lastName', label: 'Last Name' },
     { key: 'address', label: 'Address' },
@@ -24,7 +28,12 @@ async function loadPage(pageNum: number): Promise<void> {
      try {
         busy.value = true;
         error.value = null;
-        const params = new URLSearchParams({ page: String(pageNum), pageSize: String(pageSize.value) });
+        const params = new URLSearchParams({
+            page: String(pageNum),
+            pageSize: String(pageSize.value),
+            orderBy: sort.value.key,
+            desc: String(sort.value.desc),
+        });
         const data = await fetch(`/api/User?${params}`);
         if (!data.ok) {
             throw new Error(`Failed to fetch users. ${data.status}`);
@@ -43,6 +52,13 @@ async function loadPage(pageNum: number): Promise<void> {
         busy.value = false;
     }
  }
+
+// A new ordering invalidates the current page, so always restart from page 1.
+function changeSort(next: Sort): void {
+    sort.value = next;
+    loadPage(1);
+}
+
 onMounted(async () => {
     loadPage(1);
 });
@@ -53,9 +69,8 @@ onMounted(async () => {
 
     <p v-if="loading === true"> LOADING </p>
     <p v-else-if="error">{{ error.message }}</p>
-
-    <Table v-else :headers="userColumns" :items="users" />
-    <Pagination :page="page" :pageSize="pageSize" :totalCount="totalCount" :busy="busy" @update:page="loadPage" />
+    <Table v-else :headers="userColumns" :items="users" :sort="sort" @update:sort="changeSort" type="User" @deleted="loadPage(page)" @updated="loadPage(page)" @delete-failed="deleteError = $event"/>
+    <Pagination :page="page" :pageSize="pageSize" :totalCount="totalCount" :busy="busy" @update:page="loadPage"/>
 
 
 </template>

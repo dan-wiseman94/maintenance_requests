@@ -22,3 +22,14 @@ export type PagedResult<T> = {
     pageSize: number;
     totalCount: number;
 };
+
+export type Header = {
+    key: string;
+    label: string;
+    editable?: boolean;
+};
+
+export type Sort = {
+    key: string;
+    desc: boolean;
+};

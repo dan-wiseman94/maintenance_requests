@@ -10,7 +10,9 @@ export default defineConfig({
   plugins: [
     vue(),
     vueJsx(),
-    vueDevTools(),
+    // Devtools hooks into every component emit; under Vitest that stacks a listener per mount
+    // and makes wrapper.emitted() report duplicates across tests. Dev-only.
+    ...(process.env.VITEST ? [] : [vueDevTools()]),
   ],
   resolve: {
     alias: {
