@@ -35,7 +35,7 @@ services:
         if [ "$${database_exists}" -eq 0 ]; then
           /opt/mssql-tools/bin/sqlcmd -S db,1433 -U sa -P "$${MSSQL_SA_PASSWORD}" -C -b -Q "CREATE DATABASE [maintenance]"
           /opt/mssql-tools/bin/sqlcmd -S db,1433 -U sa -P "$${MSSQL_SA_PASSWORD}" -C -b -d maintenance -i /scripts/schema.sql
-          /opt/mssql-tools/bin/sqlcmd -S db,1433 -U sa -P "$${MSSQL_SA_PASSWORD}" -C -b -d maintenance -i /scripts/seed_large.sql
+          /opt/mssql-tools/bin/sqlcmd -S db,1433 -U sa -P "$${MSSQL_SA_PASSWORD}" -C -b -d maintenance -i /scripts/seed_heavy.sql
         fi
 
   api:
