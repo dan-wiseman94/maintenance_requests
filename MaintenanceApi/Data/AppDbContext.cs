@@ -31,6 +31,8 @@ public class MaintenanceRequest
 public class User
 {
     public int Id { get; set; }
+    public string Email {get; set;} = string.Empty;
+    public string PasswordHash {get; set;} = string.Empty;
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public string Address { get; set; } = string.Empty;
@@ -66,6 +68,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         {
             e.ToTable("users", "users");
             e.Property(x => x.Id).HasColumnName("id");
+            e.Property(x => x.Email).HasColumnName("email");
+            e.Property(x => x.PasswordHash).HasColumnName("password_hash");
             e.Property(x => x.FirstName).HasColumnName("first_name");
              e.Property(x => x.LastName).HasColumnName("last_name");
             e.Property(x => x.Address).HasColumnName("address");

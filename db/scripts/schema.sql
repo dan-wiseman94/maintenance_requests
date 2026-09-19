@@ -6,7 +6,7 @@ GO
 
 CREATE TABLE users.roles (
 	id INT PRIMARY KEY,
-	name NVARCHAR(50) NOT NULL UNIQUE
+	name NVARCHAR(50) NOT NULL UNIQUE 
 );
 
 CREATE TABLE requests.statuses (
@@ -16,6 +16,8 @@ CREATE TABLE requests.statuses (
 
 CREATE TABLE users.users (
 	id INT IDENTITY(1,1) PRIMARY KEY,
+	email NVARCHAR(255) UNIQUE NOT NULL,
+	password_hash NVARCHAR(255) NOT NULL,
 	first_name NVARCHAR(255) NOT NULL,
 	last_name NVARCHAR(255) NOT NULL,
 	address NVARCHAR(255) NOT NULL,
@@ -30,8 +32,10 @@ CREATE TABLE requests.maintenance_requests (
 	created_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
 	created_by INT NOT NULL,
 	status_id INT NOT NULL,
+	assigned_to INT NULL,
 	CONSTRAINT FK_creator FOREIGN KEY (created_by) REFERENCES users.users(id),
-	CONSTRAINT FK_status FOREIGN KEY (status_id) REFERENCES requests.statuses(id)
+	CONSTRAINT FK_status FOREIGN KEY (status_id) REFERENCES requests.statuses(id),
+	CONSTRAINT FK_assigned FOREIGN KEY (assigned_to) REFERENCES users.users(id)
 );
 
 INSERT INTO users.roles (id, name) VALUES

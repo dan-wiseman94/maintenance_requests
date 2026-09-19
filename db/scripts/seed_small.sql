@@ -2,17 +2,20 @@
 -- Assumes users.roles and requests.statuses are already seeded (ids 1-3)
 -- and users.users is empty so identities start at 1.
 
-INSERT INTO users.users (first_name, last_name, address, role_id) VALUES
-	('Alice',   'Nguyen',    '101 Maple St',      1),
-	('Ben',     'Carter',    '102 Maple St',      1),
-	('Chloe',   'Ramirez',   '103 Maple St',      1),
-	('Daniel',  'Okafor',    '104 Maple St',      1),
-	('Elena',   'Petrov',    '201 Oak Ave',       1),
-	('Farid',   'Haddad',    '202 Oak Ave',       1),
-	('Grace',   'Lindqvist', '203 Oak Ave',       1),
-	('Hiro',    'Tanaka',    '300 Cedar Ln',      2),
-	('Isabel',  'Moreno',    '301 Cedar Ln',      2),
-	('Jonas',   'Berg',      '1 Management Way',  3);
+-- Every seeded user shares this hash (see README for the dev password).
+DECLARE @password_hash NVARCHAR(255) = 'AQAAAAIAAYagAAAAECPXbKhDOXl1oY+s+qu+c7TAbvUoDIPzbFBubw8Al5Fd+tIfPgOh8G3ruvN/DHw0ZA==';
+
+INSERT INTO users.users (email, password_hash, first_name, last_name, address, role_id) VALUES
+	('alice@example.com', @password_hash, 'Alice',   'Nguyen',    '101 Maple St',      1),
+	('ben@example.com', @password_hash, 'Ben',     'Carter',    '102 Maple St',      1),
+	('chloe@example.com', @password_hash, 'Chloe',   'Ramirez',   '103 Maple St',      1),
+	('daniel@example.com', @password_hash, 'Daniel',  'Okafor',    '104 Maple St',      1),
+	('elena@example.com', @password_hash, 'Elena',   'Petrov',    '201 Oak Ave',       1),
+	('farid@example.com', @password_hash, 'Farid',   'Haddad',    '202 Oak Ave',       1),
+	('grace@example.com', @password_hash, 'Grace',   'Lindqvist', '203 Oak Ave',       1),
+	('hiro@example.com', @password_hash, 'Hiro',    'Tanaka',    '300 Cedar Ln',      2),
+	('isabel@example.com', @password_hash, 'Isabel',  'Moreno',    '301 Cedar Ln',      2),
+	('jonas@example.com', @password_hash, 'Jonas',   'Berg',      '1 Management Way',  3);
 
 INSERT INTO requests.maintenance_requests (location, maintenance_type, created_at, created_by, status_id) VALUES
 	('101 Maple St - Kitchen',      'Plumbing',     '2026-08-01 09:15:00', 1, 3),

@@ -2,6 +2,9 @@
 -- Generated set-based. Assumes roles/statuses are seeded (ids 1-3)
 -- and users.users is empty so identities start at 1.
 
+-- Every seeded user shares this hash (see README for the dev password).
+DECLARE @password_hash NVARCHAR(255) = 'AQAAAAIAAYagAAAAECPXbKhDOXl1oY+s+qu+c7TAbvUoDIPzbFBubw8Al5Fd+tIfPgOh8G3ruvN/DHw0ZA==';
+
 -- Tally table: 10 x 10 x 10 x 10 = 10,000 rows
 WITH d AS (
 	SELECT n FROM (VALUES (0),(1),(2),(3),(4),(5),(6),(7),(8),(9)) v(n)
@@ -32,8 +35,10 @@ streets AS (
 		(5,'Pine Dr'),(6,'Willow Way'),(7,'Ash Blvd')
 	) v(i, name)
 )
-INSERT INTO users.users (first_name, last_name, address, role_id)
+INSERT INTO users.users (email, password_hash, first_name, last_name, address, role_id)
 SELECT TOP (500)
+	CONCAT('user', n.n, '@example.com'),
+	@password_hash,
 	fn.name,
 	ln.name,
 	CONCAT(n.n, ' ', s.name),

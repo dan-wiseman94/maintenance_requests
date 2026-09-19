@@ -21,6 +21,17 @@ const statuses = [
   { value: 'Closed', label: 'Closed' },
 ] as const
 
+const maintenanceTypes = [
+  { value: 'Plumbing', label: 'Plumbing' },
+  { value: 'Electrical', label: 'Electrical' },
+  { value: 'HVAC', label: 'HVAC' },
+  { value: 'Appliance', label: 'Appliance' },
+  { value: 'Structural', label: 'Structural' },
+  { value: 'Landscaping', label: 'Landscaping' },
+  { value: 'Pest Control', label: 'Pest Control' },
+  { value: 'Painting', label: 'Painting' },
+] as const
+
 const open = defineModel<boolean>('open', { default: false })
 
 const emit = defineEmits<{
@@ -33,6 +44,8 @@ const emptyRequest = (): NewRequest => ({
   createdBy: '',
   requestStatus: statuses[0].value,
 })
+
+
 
 const draft = ref<NewRequest>(emptyRequest())
 const pending = ref(false)
@@ -111,21 +124,20 @@ const submit = async () => {
       />
 
       <label for="create-request-maintenanceType">Maintenance type</label>
-      <input
+      <select
         id="create-request-maintenanceType"
         v-model.trim="draft.maintenanceType"
-        type="text"
         required
-        maxlength="255"
-      />
-
-      <label for="create-request-createdBy">Created by</label>
-      <select id="create-request-createdBy" v-model="draft.createdBy" required>
-        <option value="" disabled>Select a user</option>
-        <option v-for="user in users" :key="user.id" :value="user.id">
-          {{ user.firstName }} {{ user.lastName }}
+      >
+        <option value="" disabled>Select a maintenance type</option>
+        <option v-for="type in maintenanceTypes" :key="type.value" :value="type.value">
+          {{ type.label }}
         </option>
       </select>
+
+      <label for="create-request-createdBy">Created by</label>
+      <input id="create-request-createdBy" v-model="draft.createdBy" required>
+      </input>
       <p v-if="usersError" class="field-error">{{ usersError }}</p>
 
       <label for="create-request-requestStatus">Status</label>

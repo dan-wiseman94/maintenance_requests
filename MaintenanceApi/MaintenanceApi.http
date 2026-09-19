@@ -83,6 +83,14 @@ Accept: application/json
 GET {{MaintenanceApi_HostAddress}}/api/user/1
 Accept: application/json
 
+### Get user by role
+GET {{MaintenanceApi_HostAddress}}/api/user/role/maintenance
+Accept: application/json
+
+### Get missing role (expect 400)
+GET {{MaintenanceApi_HostAddress}}/api/user/role/fakeRole
+Accept: application/json
+
 ### Get a missing user (expect 404)
 GET {{MaintenanceApi_HostAddress}}/api/user/9999
 Accept: application/json

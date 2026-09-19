@@ -2,13 +2,16 @@ using Microsoft.AspNetCore.Mvc;
 using MaintenanceApi.Data;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Identity;
 
 namespace MaintenanceApi.Controllers;
 
 
 public record CreateUserRequest(
     [Required, MaxLength(255)] string FirstName,
-    [Required, MaxLength(255)] string LastName,
+    [Required, MaxLength(255)] string Email,
+    [Required, MaxLength(255)] string PasswordHash,
+    [Required, MaxLength(255)] string LastName, 
     [Required, MaxLength(255)] string Address,
     [Required] UserRole UserRole
 );
@@ -16,9 +19,9 @@ public record CreateUserRequest(
 
 [ApiController]
 [Route("api/[controller]")]
-public class UserController(AppDbContext db) : ControllerBase
+public class UserController(AppDbContext db, IPasswordHasher<User> hasher) : ControllerBase
 {
-   
+
     [HttpGet(Name = "GetUsers")]
     public async Task<ActionResult<PagedResult<User>>> Get(
         [FromQuery] int page = 1,
@@ -67,30 +70,68 @@ public class UserController(AppDbContext db) : ControllerBase
         return user;
     }
 
-    [HttpPost (Name = "CreateUser")]
+    [HttpGet("role/{role}", Name = "GetUsersByRole")]
+    public async Task<ActionResult<IEnumerable<User>>> GetByRole(
+        UserRole role,
+        [FromQuery] string? q = null,
+        [FromQuery] int limit = 10
+        )
+
+    {
+        if (!Enum.IsDefined(role))
+        {
+            return BadRequest();
+        }
+        limit = Math.Clamp(limit, 1, 50);
+
+        IQueryable<User> query = db.Users
+            .AsNoTracking()
+            .Where(r => r.UserRole == role);
+
+        q = q?.Trim();
+        if (!string.IsNullOrEmpty(q))
+        {
+            query = query.Where( u =>
+            u.LastName.StartsWith(q) || u.FirstName.StartsWith(q));
+        }
+
+        var users = await query 
+            .OrderBy(r => r.LastName)
+            .ThenBy(r => r.FirstName)
+            .Take(limit)
+            .ToListAsync();
+        
+        return users;
+    }
+
+    [HttpPost(Name = "CreateUser")]
     public async Task<ActionResult<User>> Create(CreateUserRequest request)
     {
+
         var user = new User
         {
             FirstName = request.FirstName,
+            Email = request.Email,
             LastName = request.LastName,
             Address = request.Address,
             UserRole = request.UserRole,
         };
+        
+        user.PasswordHash = hasher.HashPassword(user, request.PasswordHash);
 
         db.Users.Add(user);
         await db.SaveChangesAsync();
-        return CreatedAtRoute("GetUser", new {id = user.Id}, user);
+        return CreatedAtRoute("GetUser", new { id = user.Id }, user);
 
     }
 
-    [HttpPut ("{id:int}", Name = "UpdateUser")]
+    [HttpPut("{id:int}", Name = "UpdateUser")]
     public async Task<ActionResult<User>> Update(int id, CreateUserRequest request)
     {
         var user = await db.Users.FindAsync(id);
 
         if (user is null)
-        {   return NotFound();}
+        { return NotFound(); }
 
         user.FirstName = request.FirstName;
         user.LastName = request.LastName;
@@ -101,7 +142,7 @@ public class UserController(AppDbContext db) : ControllerBase
         return NoContent();
     }
 
-   [HttpDelete("{id:int}", Name = "DeleteUser")]
+    [HttpDelete("{id:int}", Name = "DeleteUser")]
     public async Task<IActionResult> Delete(int id)
     {
         var user = await db.Users.FindAsync(id);
@@ -114,5 +155,5 @@ public class UserController(AppDbContext db) : ControllerBase
         await db.SaveChangesAsync();
         return NoContent();
     }
-        
+
 }

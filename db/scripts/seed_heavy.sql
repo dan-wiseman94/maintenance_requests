@@ -7,6 +7,8 @@ SET NOCOUNT ON;
 DECLARE @user_count    INT = 100000;
 DECLARE @request_count INT = 5000000;
 DECLARE @batch_size    INT = 100000;
+-- Every seeded user shares this hash (see README for the dev password).
+DECLARE @password_hash NVARCHAR(255) = 'AQAAAAIAAYagAAAAECPXbKhDOXl1oY+s+qu+c7TAbvUoDIPzbFBubw8Al5Fd+tIfPgOh8G3ruvN/DHw0ZA==';
 
 ------------------------------------------------------------
 -- Users: one set-based insert (100k rows is fine in one go)
@@ -41,8 +43,10 @@ streets AS (
 		(5,'Pine Dr'),(6,'Willow Way'),(7,'Ash Blvd'),(8,'Spruce Pl'),(9,'Hickory Ter')
 	) v(i, name)
 )
-INSERT INTO users.users (first_name, last_name, address, role_id)
+INSERT INTO users.users (email, password_hash, first_name, last_name, address, role_id)
 SELECT
+	CONCAT('user', n.n, '@example.com'),
+	@password_hash,
 	fn.name,
 	ln.name,
 	CONCAT(n.n, ' ', s.name),

@@ -26,10 +26,10 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_users_address' AND obj
     CREATE INDEX IX_users_address
         ON users.users (address);
 
-IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_users_role_id' AND object_id = OBJECT_ID('users.users'))
-    CREATE INDEX IX_users_role_id
-        ON users.users (role_id);
-
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_users_full_name' AND object_id = OBJECT_ID('users.users'))
     CREATE INDEX IX_users_full_name
         ON users.users (last_name, first_name);
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_users_role' AND object_id = OBJECT_ID('users.users'))
+    CREATE INDEX IX_users_role
+        ON users.users (role_id, last_name, first_name);
