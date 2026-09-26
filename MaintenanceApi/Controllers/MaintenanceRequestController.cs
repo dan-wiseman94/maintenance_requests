@@ -2,13 +2,15 @@ using Microsoft.AspNetCore.Mvc;
 using MaintenanceApi.Data;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using MaintenanceApi.Auth;
+using Microsoft.AspNetCore.Authorization;
 
 namespace MaintenanceApi.Controllers;
 
 public record CreateMaintenanceRequest(
     [Required, MaxLength(255)] string Location,
     [Required, MaxLength(255)] string MaintenanceType,
-    [Range(1, int.MaxValue)] int CreatedBy,
+    [Range(1, int.MaxValue)] int? CreatedBy,
     [Required] RequestStatus RequestStatus
 );
 
@@ -17,17 +19,18 @@ public record MaintenanceRequestResponse(
     string Location,
     string MaintenanceType,
     DateTime CreatedAt,
-    int CreatedBy,
+    int? CreatedBy,
     string CreatedByName,
     RequestStatus RequestStatus
 );
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class MaintenanceRequestController(AppDbContext db) : ControllerBase
 {
 
-   
+
     [HttpGet(Name = "GetMaintenanceRequests")]
     public async Task<ActionResult<PagedResult<MaintenanceRequestResponse>>> Get(
         [FromQuery] int page = 1,
@@ -96,11 +99,15 @@ public class MaintenanceRequestController(AppDbContext db) : ControllerBase
     [HttpPost("CreateMaintenanceRequest")]
     public async Task<ActionResult<MaintenanceRequestResponse>> Create(CreateMaintenanceRequest request)
     {
-        var new_request = new  MaintenanceRequest
+        // Only and admin can create a request for another user. Otherwise, the createdBy must be the current user.
+        var creatorId = request.CreatedBy is int requested && User.IsInRole(UserRole.Admin) ?
+            requested : User.GetUserId();
+
+        var new_request = new MaintenanceRequest
         {
             Location = request.Location,
             MaintenanceType = request.MaintenanceType,
-            CreatedBy = request.CreatedBy,
+            CreatedBy = creatorId,
             RequestStatus = request.RequestStatus
         };
 
@@ -125,6 +132,7 @@ public class MaintenanceRequestController(AppDbContext db) : ControllerBase
     }
 
     [HttpPut("{id:int}", Name = "UpdateMainteanceRequest")]
+    [Authorize(Roles = "Maintenance,Admin")]
     public async Task<ActionResult<MaintenanceRequest>> Update(int id, CreateMaintenanceRequest request)
     {
         var maintenance_request = await db.MaintenanceRequests.FindAsync(id);
@@ -135,15 +143,19 @@ public class MaintenanceRequestController(AppDbContext db) : ControllerBase
         }
         maintenance_request.Location = request.Location;
         maintenance_request.MaintenanceType = request.MaintenanceType;
-        maintenance_request.CreatedBy = request.CreatedBy;
+        maintenance_request.CreatedBy = request.CreatedBy ?? throw new ArgumentException("CreatedBy is required.", nameof(request.CreatedBy));
         maintenance_request.RequestStatus = request.RequestStatus;
-      
+
+
+        if (request.CreatedBy is int createdBy) maintenance_request.CreatedBy = createdBy;
+
 
         await db.SaveChangesAsync();
         return NoContent();
     }
 
     [HttpDelete("{id:int}", Name = "DeleteMaintenanceRequest")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(int id)
     {
         var maintenance_request = await db.MaintenanceRequests.FindAsync(id);

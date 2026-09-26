@@ -1,16 +1,27 @@
 <script setup lang="ts">
 import 'vue-sonner/style.css'
 import { Toaster } from 'vue-sonner'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from './stores/auth'
+
+const auth = useAuthStore()
+const router = useRouter()
+
+const signOut = async () => {
+  await auth.logout()
+  router.push({ name: 'login' })
+}
 </script>
 
 <template>
   <main>
     <div class="center">
       <h1>Residential Maintenance Requests</h1>
-      <nav class="link-bar">
-        <RouterLink to="/">Default</RouterLink>
-        <RouterLink to="/users">View Users</RouterLink>
-        <RouterLink to="/requests">View Requests</RouterLink>
+      <nav v-if="auth.user" class="link-bar" aria-label="Primary">
+        <RouterLink :to="{ name: 'requests' }">View Requests</RouterLink>
+        <RouterLink v-if="auth.isAdmin" :to="{ name: 'users' }">View Users</RouterLink>
+        <span class="who">{{ auth.user.firstName }} · {{ auth.user.userRole }}</span>
+        <button type="button" class="sign-out" @click="signOut">Sign Out</button>
       </nav>
       <RouterView />
     </div>
@@ -45,5 +56,16 @@ h1::after {
   margin: var(--space-3) auto 0;
   border-radius: 2px;
   background-color: var(--accent);
+}
+
+.who {
+  color: var(--ink-faint);
+  margin-left: auto;
+}
+
+.sign-out {
+  all: unset;
+  cursor: pointer;
+  color: var(--accent);
 }
 </style>

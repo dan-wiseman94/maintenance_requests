@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
 
 import { flushPromises, mount } from '@vue/test-utils'
 import UsersView from '../views/UsersView.vue'
@@ -6,6 +7,8 @@ import type { PagedResult, User } from '@/types'
 import Pagination from '@/components/Pagination.vue'
 
 describe('UsersView', () => {
+  // The view reads the auth store to decide the Table's can-edit/can-delete flags.
+  beforeEach(() => setActivePinia(createPinia()))
   afterEach(() => {
     vi.unstubAllGlobals()
   })
@@ -13,7 +16,14 @@ describe('UsersView', () => {
   it('retrieves data', async () => {
     const body: PagedResult<User> = {
       items: [
-        { id: 1, firstName: 'Alice', lastName: 'Smith', address: '1 Main St', userRole: 'Tenant' },
+        {
+          id: 1,
+          firstName: 'Alice',
+          lastName: 'Smith',
+          address: '1 Main St',
+          userRole: 'Tenant',
+          email: 'ada@example.com',
+        },
       ],
       page: 1,
       pageSize: 20,

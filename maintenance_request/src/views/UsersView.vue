@@ -5,6 +5,9 @@ import type { User, Header, Sort } from '@/types'
 import Table from '@/components/Table.vue'
 import Pagination from '@/components/Pagination.vue'
 import CreateUserModal from '@/components/CreateUserModal.vue'
+import { apiFetch } from '@/lib/api'
+import { useAuthStore } from '@/stores/auth'
+const auth = useAuthStore()
 const users = ref<User[]>([])
 const page = ref(1)
 const pageSize = ref(20)
@@ -22,6 +25,7 @@ const userColumns: Header[] = [
   { key: 'lastName', label: 'Last Name' },
   { key: 'address', label: 'Address' },
   { key: 'userRole', label: 'Role' },
+  { key: 'email', label: 'Email' },
 ]
 
 async function loadPage(pageNum: number): Promise<void> {
@@ -34,7 +38,7 @@ async function loadPage(pageNum: number): Promise<void> {
       orderBy: sort.value.key,
       desc: String(sort.value.desc),
     })
-    const data = await fetch(`/api/User?${params}`)
+    const data = await apiFetch(`/api/User?${params}`)
     if (!data.ok) {
       throw new Error(`Failed to fetch users. ${data.status}`)
     }
@@ -69,6 +73,8 @@ onMounted(async () => {
     <!-- A new row may land on any page under the current sort, so restart from page 1. -->
     <CreateUserModal v-model:open="showCreate" @created="loadPage(1)" />
     <Table
+      :can-edit="auth.isAdmin"
+      :can-delete="auth.isAdmin"
       :headers="userColumns"
       :items="users"
       :sort="sort"

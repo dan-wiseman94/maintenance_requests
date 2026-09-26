@@ -3,15 +3,41 @@ using MaintenanceApi.Data;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 
 namespace MaintenanceApi.Controllers;
 
-
+public record UserResponse(
+    int Id,
+    string FirstName,
+    string LastName,
+    string Email,
+    string Address,
+    UserRole UserRole
+)
+{
+    public static UserResponse From(User user) => new(
+        user.Id,
+        user.FirstName,
+        user.LastName,
+        user.Email,
+        user.Address,
+        user.UserRole
+    );
+};
 public record CreateUserRequest(
     [Required, MaxLength(255)] string FirstName,
-    [Required, MaxLength(255)] string Email,
-    [Required, MaxLength(255)] string PasswordHash,
-    [Required, MaxLength(255)] string LastName, 
+    [Required, MaxLength(255)] string LastName,
+    [Required, EmailAddress, MaxLength(255)] string Email,
+    [Required, MaxLength(255)] string Password,
+    [Required, MaxLength(255)] string Address,
+    [Required] UserRole UserRole
+);
+
+public record UpdateUserRequest(
+    [Required, MaxLength(255)] string FirstName,
+    [Required, MaxLength(255)] string LastName,
+    [Required, EmailAddress, MaxLength(255)] string Email,
     [Required, MaxLength(255)] string Address,
     [Required] UserRole UserRole
 );
@@ -19,11 +45,13 @@ public record CreateUserRequest(
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Roles = "Admin")]
 public class UserController(AppDbContext db, IPasswordHasher<User> hasher) : ControllerBase
 {
+    private static string NormalizeEmail(string email) => email.Trim().ToLowerInvariant();
 
     [HttpGet(Name = "GetUsers")]
-    public async Task<ActionResult<PagedResult<User>>> Get(
+    public async Task<ActionResult<PagedResult<UserResponse>>> Get(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         [FromQuery] string orderBy = "lastName",
@@ -43,23 +71,31 @@ public class UserController(AppDbContext db, IPasswordHasher<User> hasher) : Con
             _ => query.OrderByDirection(u => u.LastName, desc, u => u.Id)
         };
 
-        var totalCount = await query.CountAsync();
-        var items = await query
+        var projected = query.Select(u => new UserResponse(
+            u.Id,
+            u.FirstName,
+            u.LastName,
+            u.Email,
+            u.Address,
+            u.UserRole
+        ));
+
+        var totalCount = await projected.CountAsync();
+        var items = await projected
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
 
-        var pagedResult = new PagedResult<User>(
+        return new PagedResult<UserResponse>(
             items,
             page,
             pageSize,
             totalCount);
 
-        return pagedResult;
     }
 
     [HttpGet("{id:int}", Name = "GetUser")]
-    public async Task<ActionResult<User>> GetById(int id)
+    public async Task<ActionResult<UserResponse>> GetById(int id)
     {
         var user = await db.Users.FindAsync(id);
         if (user is null)
@@ -67,11 +103,11 @@ public class UserController(AppDbContext db, IPasswordHasher<User> hasher) : Con
             return NotFound();
 
         }
-        return user;
+        return UserResponse.From(user);
     }
 
     [HttpGet("role/{role}", Name = "GetUsersByRole")]
-    public async Task<ActionResult<IEnumerable<User>>> GetByRole(
+    public async Task<ActionResult<IEnumerable<UserResponse>>> GetByRole(
         UserRole role,
         [FromQuery] string? q = null,
         [FromQuery] int limit = 10
@@ -91,43 +127,54 @@ public class UserController(AppDbContext db, IPasswordHasher<User> hasher) : Con
         q = q?.Trim();
         if (!string.IsNullOrEmpty(q))
         {
-            query = query.Where( u =>
+            query = query.Where(u =>
             u.LastName.StartsWith(q) || u.FirstName.StartsWith(q));
         }
 
-        var users = await query 
+        var users = await query
             .OrderBy(r => r.LastName)
             .ThenBy(r => r.FirstName)
             .Take(limit)
             .ToListAsync();
-        
-        return users;
+
+        var userResponses = users.Select(UserResponse.From);
+        return userResponses.ToList();
     }
 
     [HttpPost(Name = "CreateUser")]
-    public async Task<ActionResult<User>> Create(CreateUserRequest request)
+    public async Task<ActionResult<UserResponse>> Create(CreateUserRequest request)
     {
+        var email = NormalizeEmail(request.Email);
 
+        if (await db.Users.AnyAsync(u => u.Email == email))
+        {
+            return Conflict(new { message = "Email already exists." });
+        }
         var user = new User
         {
             FirstName = request.FirstName,
-            Email = request.Email,
+            Email = email,
             LastName = request.LastName,
             Address = request.Address,
             UserRole = request.UserRole,
         };
-        
-        user.PasswordHash = hasher.HashPassword(user, request.PasswordHash);
+
+        user.PasswordHash = hasher.HashPassword(user, request.Password);
 
         db.Users.Add(user);
         await db.SaveChangesAsync();
-        return CreatedAtRoute("GetUser", new { id = user.Id }, user);
+        return CreatedAtRoute("GetUser", new { id = user.Id }, UserResponse.From(user));
 
     }
 
     [HttpPut("{id:int}", Name = "UpdateUser")]
-    public async Task<ActionResult<User>> Update(int id, CreateUserRequest request)
+    public async Task<ActionResult<UserResponse>> Update(int id, UpdateUserRequest request)
     {
+        var email = NormalizeEmail(request.Email);
+        if (await db.Users.AnyAsync(u => u.Email == email && u.Id != id))
+        {
+            return Conflict(new { message = "Email already exists." });
+        }
         var user = await db.Users.FindAsync(id);
 
         if (user is null)
@@ -135,6 +182,7 @@ public class UserController(AppDbContext db, IPasswordHasher<User> hasher) : Con
 
         user.FirstName = request.FirstName;
         user.LastName = request.LastName;
+        user.Email = email;
         user.Address = request.Address;
         user.UserRole = request.UserRole;
 

@@ -2,6 +2,7 @@
 import { toast } from 'vue-sonner'
 import type { Header, Sort } from '@/types'
 import { computed, ref } from 'vue'
+import { apiFetch } from '@/lib/api'
 
 interface Item {
   [key: string]: unknown
@@ -14,6 +15,8 @@ const props = defineProps<{
   type: string
   sort?: Sort
   busy?: boolean
+  canEdit?: boolean
+  canDelete?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -23,13 +26,15 @@ const emit = defineEmits<{
   updated: [id: string | number]
 }>()
 
+const actionColumns = computed(() => Number(props.canEdit) + Number(props.canDelete))
+
 const deleteRow = async (rowType: string = 'none', id?: string | number) => {
   if (id === undefined || id === null) {
     return
   }
 
   try {
-    const response = await fetch(`/api/${rowType}/${id}`, {
+    const response = await apiFetch(`/api/${rowType}/${id}`, {
       method: 'DELETE',
     })
 
@@ -61,7 +66,7 @@ const saveEdit = async () => {
   if (current?.id === undefined) return
 
   try {
-    const response = await fetch(`/api/${props.type}/${current.id}`, {
+    const response = await apiFetch(`/api/${props.type}/${current.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(current),
@@ -120,14 +125,14 @@ const canSort = computed(() => !props.busy)
               </span>
             </button>
           </th>
-          <!-- TODO: make only available to Admin users (needs login system)-->
-          <th>Edit</th>
-          <th>Delete</th>
+          <th v-if="canEdit">Edit</th>
+          <th v-if="canDelete">Delete</th>
         </tr>
       </thead>
       <tbody>
+        <!-- Empty row-->
         <tr v-if="items.length === 0">
-          <td :colspan="headers.length + 2" class="no-data">No data available.</td>
+          <td :colspan="headers.length + actionColumns" class="no-data">No data available.</td>
         </tr>
 
         <!-- loop through items to build rows -->
@@ -143,7 +148,7 @@ const canSort = computed(() => !props.busy)
               {{ item[header.key] }}
             </slot>
           </td>
-          <td>
+          <td v-if="canEdit">
             <button
               type="button"
               :aria-label="isEditing(item) ? 'Save' : 'Edit'"
@@ -156,7 +161,7 @@ const canSort = computed(() => !props.busy)
               }}</span>
             </button>
           </td>
-          <td>
+          <td v-if="canDelete">
             <button @click="deleteRow(type, item.id)">X</button>
           </td>
         </tr>

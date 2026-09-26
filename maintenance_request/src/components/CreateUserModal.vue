@@ -3,8 +3,9 @@ import { ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 import type { User } from '@/types'
 import Modal from './Modal.vue'
+import { apiFetch } from '@/lib/api.ts'
 
-type NewUser = Omit<User, 'id'>
+type NewUser = Omit<User, 'id'> & { password: string }
 
 // Must match the UserRole enum names: the API serialises enums as strings
 // and rejects integers (JsonStringEnumConverter with allowIntegerValues: false).
@@ -17,6 +18,8 @@ const emit = defineEmits<{
 }>()
 
 const emptyUser = (): NewUser => ({
+  email: '',
+  password: '',
   firstName: '',
   lastName: '',
   address: '',
@@ -35,7 +38,7 @@ watch(open, (isOpen) => {
 const submit = async () => {
   pending.value = true
   try {
-    const response = await fetch('/api/User', {
+    const response = await apiFetch('/api/User', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(draft.value),
@@ -76,6 +79,24 @@ const submit = async () => {
         v-model.trim="draft.lastName"
         type="text"
         required
+        maxlength="255"
+      />
+      <label for="create-user-email">Email</label>
+      <input
+        id="create-user-email"
+        v-model.trim="draft.email"
+        type="email"
+        required
+        maxlength="255"
+      />
+      <label for="create-user-password">Password</label>
+      <input
+        id="create-user-password"
+        v-model.trim="draft.password"
+        type="password"
+        autocomplete="new-password"
+        required
+        minlength="8"
         maxlength="255"
       />
 

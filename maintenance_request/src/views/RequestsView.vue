@@ -4,6 +4,9 @@ import type { MaintenanceRequest, Header, Sort } from '@/types'
 import Table from '@/components/Table.vue'
 import Pagination from '@/components/Pagination.vue'
 import CreateMaintenanceRequestModal from '@/components/CreateMaintenanceRequestModal.vue'
+import { apiFetch } from '@/lib/api'
+import { useAuthStore } from '@/stores/auth'
+const auth = useAuthStore()
 const requestColumns: Header[] = [
   { key: 'location', label: 'Location' },
   { key: 'maintenanceType', label: 'Maintenance Type' },
@@ -39,7 +42,7 @@ async function loadPage(pageNum: number): Promise<void> {
       orderBy: sort.value.key,
       desc: String(sort.value.desc),
     })
-    const data = await fetch(`/api/MaintenanceRequest?${params}`)
+    const data = await apiFetch(`/api/MaintenanceRequest?${params}`)
     if (!data.ok) {
       throw new Error(`Failed to fetch requests. ${data.status}`)
     }
@@ -74,6 +77,8 @@ onMounted(async () => {
     <!-- A new row may land on any page under the current sort, so restart from page 1. -->
     <CreateMaintenanceRequestModal v-model:open="showCreate" @created="loadPage(1)" />
     <Table
+      :can-edit="auth.canManageRequests"
+      :can-delete="auth.isAdmin"
       :headers="requestColumns"
       :items="requests"
       :sort="sort"

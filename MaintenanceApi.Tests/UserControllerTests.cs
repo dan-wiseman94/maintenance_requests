@@ -40,4 +40,37 @@ public class UserControllerTests
         Assert.Equal("Ada", result.Value!.FirstName);
     }
 
+    [Fact]
+    public async Task Create_HashesPassword_AndNeverReturnsIt()
+    {
+        using var db = NewDb();
+        var controller = NewController(db);
+
+        var request = new CreateUserRequest("Ada", "Wong", "Ada@Example.com", "correct-horse", "1 Main St", UserRole.Tenant);    
+
+        var result = await controller.Create(request);
+
+        var created = Assert.IsType<CreatedAtRouteResult>(result.Result);
+        var body = Assert.IsType<UserResponse>(created.Value);
+        Assert.Equal("ada@example.com", body.Email);
+        var stored = await db.Users.SingleAsync();
+        Assert.NotEqual("correct-horse", stored.PasswordHash);
+
+        Assert.Equal(PasswordVerificationResult.Success, new PasswordHasher<User>().VerifyHashedPassword(stored, stored.PasswordHash, "correct-horse"));
+    }
+
+[Fact]
+    public async Task Create_ReturnsConflict_WhenEmailTaken()
+    {
+        using var db = NewDb();
+        db.Users.Add(new User { Id = 1, Email = "taken@example.com", FirstName = "A", LastName = "B", Address = "x", UserRole = UserRole.Tenant });
+        await db.SaveChangesAsync();
+        var controller = NewController(db);
+
+        var result = await controller.Create(new CreateUserRequest("C", "D", "TAKEN@example.com", "password123", "y", UserRole.Tenant));
+
+        Assert.IsType<ConflictObjectResult>(result.Result);
+    }
+
+
 }

@@ -7,7 +7,7 @@ services:
       MSSQL_SA_PASSWORD: "${SA_PASSWORD}"
       MSSQL_PID: "Developer"
     ports:
-      - "1433:1433"
+      - "${DB_PORT:-1433}:1433"
     volumes:
       - mssql-data:/var/opt/mssql
       - ./db/scripts/:/scripts:ro
@@ -52,8 +52,9 @@ services:
       - api-obj:/src/obj
       # Persist the NuGet cache so restore doesn't re-download on every start.
       - nuget-packages:/root/.nuget/packages
+      - dataprotection-keys:/root/.aspnet/DataProtection-Keys
     ports:
-      - "5000:8080"
+      - "${API_PORT:-5000}:8080"
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
       ASPNETCORE_URLS: "http://+:8080"
@@ -74,10 +75,10 @@ services:
       - ./maintenance_request:/app
       - frontend-node-modules:/app/node_modules
     ports:
-      - "5173:5173"
+      - "${FRONTEND_PORT:-5173}:5173"
     environment:
       CHOKIDAR_USEPOLLING: "true"
-    command: sh -c "corepack enable && pnpm install && pnpm dev --host 0.0.0.0"
+    command: sh -c "corepack enable && pnpm install --frozen-lockfile && pnpm dev --host 0.0.0.0"
     depends_on:
       - api
 
@@ -87,3 +88,4 @@ volumes:
   api-bin:
   api-obj:
   nuget-packages:
+  dataprotection-keys:

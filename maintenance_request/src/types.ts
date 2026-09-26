@@ -1,10 +1,12 @@
 export type User = {
   id: number
+  email: string
   firstName: string
   lastName: string
   address: string
-  userRole: string
+  userRole: UserRole
 }
+
 export type MaintenanceRequest = {
   id: number
   location: string
@@ -31,3 +33,5 @@ export type Sort = {
   key: string
   desc: boolean
 }
+
+export type UserRole = 'Tenant' | 'Maintenance' | 'Admin'

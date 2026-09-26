@@ -30,6 +30,8 @@ describe('Table', () => {
           { key: 'maintenanceType', label: 'Maintenance Type' },
         ],
         items: [],
+        canEdit: true,
+        canDelete: true,
       },
     })
 
@@ -41,6 +43,21 @@ describe('Table', () => {
       'Edit',
       'Delete',
     ])
+  })
+  it('hides the action columns unless told to show them', () => {
+    const wrapper = mount(Table, {
+      props: {
+        type: 'MaintenanceRequest',
+        headers: [
+          { key: 'location', label: 'Location' },
+          { key: 'maintenanceType', label: 'Maintenance Type' },
+        ],
+        items: [{ id: 1, location: 'Here', maintenanceType: 'Something' }],
+      },
+    })
+
+    expect(wrapper.findAll('th')).toHaveLength(2)
+    expect(wrapper.find('tbody button').exists()).toBe(false)
   })
   it('Renders one body row per item', () => {
     const wrapper = mount(Table, {
@@ -66,6 +83,8 @@ describe('Table', () => {
             createdBy: 'Not Alex Morgan',
           },
         ],
+        canEdit: true,
+        canDelete: true,
       },
     })
 
@@ -138,6 +157,8 @@ describe('Table', () => {
           { id: 2, location: 'There' },
         ],
         type: 'MaintenanceRequest',
+        canEdit: true,
+        canDelete: true,
       },
     })
 
@@ -167,6 +188,8 @@ describe('Table', () => {
         ],
         items: [{ id: 1, firstName: 'Alice', address: '1 Main St', userRole: 'Tenant' }],
         type: 'User',
+        canEdit: true,
+        canDelete: true,
       },
     })
 
@@ -205,6 +228,8 @@ describe('Table', () => {
         headers: [{ key: 'address', label: 'Address' }],
         items: [{ id: 1, address: '1 Main St' }],
         type: 'User',
+        canEdit: true,
+        canDelete: true,
       },
     })
 
@@ -227,6 +252,8 @@ describe('Table', () => {
         ],
         items: [{ id: 1, location: 'Here', createdAt: '2024-01-15' }],
         type: 'MaintenanceRequest',
+        canEdit: true,
+        canDelete: true,
       },
     })
 

@@ -13,6 +13,8 @@ describe('CreateUserModal', () => {
     await wrapper.find('#create-user-lastName').setValue('Smith')
     await wrapper.find('#create-user-address').setValue('1 Main St')
     await wrapper.find('#create-user-userRole').setValue('Admin')
+    await wrapper.find('#create-user-email').setValue('ada@example.com')
+    await wrapper.find('#create-user-password').setValue('correct-horse')
   }
 
   it('opens the dialog when open is true', async () => {
@@ -33,6 +35,7 @@ describe('CreateUserModal', () => {
       lastName: 'Smith',
       address: '1 Main St',
       userRole: 'Admin',
+      email: 'ada@example.com',
     }
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValue({
       ok: true,
@@ -54,6 +57,8 @@ describe('CreateUserModal', () => {
       lastName: 'Smith',
       address: '1 Main St',
       userRole: 'Admin',
+      email: 'ada@example.com',
+      password: 'correct-horse',
     })
 
     expect(wrapper.emitted('created')?.[0]).toEqual([created])

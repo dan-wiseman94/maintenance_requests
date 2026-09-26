@@ -3,7 +3,9 @@ import { ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 import type { MaintenanceRequest, PagedResult, User } from '@/types'
 import Modal from './Modal.vue'
-
+import { apiFetch } from '@/lib/api.ts'
+import { useAuthStore } from '@/stores/auth.ts'
+const auth = useAuthStore()
 // What the API's CreateMaintenanceRequest record accepts. createdAt and
 // createdByName are server-derived, so they are not part of the form.
 type NewRequest = {
@@ -45,8 +47,6 @@ const emptyRequest = (): NewRequest => ({
   requestStatus: statuses[0].value,
 })
 
-
-
 const draft = ref<NewRequest>(emptyRequest())
 const pending = ref(false)
 
@@ -65,7 +65,7 @@ const loadUsers = async () => {
       orderBy: 'lastName',
       desc: 'false',
     })
-    const response = await fetch(`/api/User?${params}`)
+    const response = await apiFetch(`/api/User?${params}`)
     if (!response.ok) {
       throw new Error(`HTTP error status: ${response.status}`)
     }
@@ -78,7 +78,9 @@ const loadUsers = async () => {
 
 watch(open, (isOpen) => {
   if (isOpen) {
-    loadUsers()
+    if (auth.isAdmin) {
+      loadUsers()
+    }
   } else {
     // Reset on every close so a cancelled form does not reappear half-filled.
     draft.value = emptyRequest()
@@ -88,10 +90,12 @@ watch(open, (isOpen) => {
 const submit = async () => {
   pending.value = true
   try {
-    const response = await fetch('/api/MaintenanceRequest/CreateMaintenanceRequest', {
+    const { createdBy, ...rest } = draft.value
+    const body = auth.isAdmin && createdBy !== '' ? { ...rest, createdBy } : rest
+    const response = await apiFetch('/api/MaintenanceRequest/CreateMaintenanceRequest', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(draft.value),
+      body: JSON.stringify(body),
     })
 
     if (!response.ok) {
@@ -124,21 +128,23 @@ const submit = async () => {
       />
 
       <label for="create-request-maintenanceType">Maintenance type</label>
-      <select
-        id="create-request-maintenanceType"
-        v-model.trim="draft.maintenanceType"
-        required
-      >
+      <select id="create-request-maintenanceType" v-model="draft.maintenanceType" required>
         <option value="" disabled>Select a maintenance type</option>
         <option v-for="type in maintenanceTypes" :key="type.value" :value="type.value">
           {{ type.label }}
         </option>
       </select>
 
-      <label for="create-request-createdBy">Created by</label>
-      <input id="create-request-createdBy" v-model="draft.createdBy" required>
-      </input>
-      <p v-if="usersError" class="field-error">{{ usersError }}</p>
+      <template v-if="auth.isAdmin">
+        <label for="create-request-createdBy">Created by</label>
+        <select id="create-request-createdBy" v-model="draft.createdBy" required>
+          <option value="" disabled>Select a tenant</option>
+          <option v-for="user in users" :key="user.id" :value="user.id">
+            {{ user.lastName }}, {{ user.firstName }} — {{ user.email }}
+          </option>
+        </select>
+        <p v-if="usersError" class="field-error">{{ usersError }}</p>
+      </template>
 
       <label for="create-request-requestStatus">Status</label>
       <select id="create-request-requestStatus" v-model="draft.requestStatus" required>

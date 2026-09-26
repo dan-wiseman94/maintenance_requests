@@ -147,3 +147,25 @@ DELETE {{MaintenanceApi_HostAddress}}/api/user/1
 
 ### Delete a missing user (expect 404)
 DELETE {{MaintenanceApi_HostAddress}}/api/user/9999
+
+
+### Login as dev admin
+POST {{MaintenanceApi_HostAddress}}/api/auth/login 
+Content-Type: application/json
+
+{ "email": "dev_admin@email.com", "password": "password" }
+
+### Who am I 
+GET {{MaintenanceApi_HostAddress}}/api/auth/me 
+
+
+### Wrong password 
+POST {{MaintenanceApi_HostAddress}}/api/auth/login 
+Content-Type: application/json
+
+{ "email": "dev_admin@email.com", "password": "nope" }
+
+### Logout (expect 204)
+POST {{MaintenanceApi_HostAddress}}/api/auth/logout
+
+

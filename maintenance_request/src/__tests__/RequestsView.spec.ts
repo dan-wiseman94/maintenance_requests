@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
 import { render } from 'vitest-browser-vue'
 
 import { flushPromises, mount } from '@vue/test-utils'
@@ -9,6 +10,8 @@ import Pagination from '@/components/Pagination.vue'
 import Table from '@/components/Table.vue'
 
 describe('RequestsView', () => {
+  // The view reads the auth store to decide the Table's can-edit/can-delete flags.
+  beforeEach(() => setActivePinia(createPinia()))
   afterEach(() => {
     vi.unstubAllGlobals()
   })
